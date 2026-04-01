@@ -19,9 +19,10 @@ struct task {
     struct task *next;
 };
 
+// Function for simulating sfjp
 void simulate_sjfp(struct task *tasks[], int num_tasks) {
-    struct task *cpu_head = NULL;
-    struct task *ready_head = NULL;
+    struct task *cpu_head = NULL; // Points to the task being held by the cpu
+    struct task *ready_head = NULL; // Points to the head of the ready queue list
     int current_time = 0;
     int completed = 0;
     int next_task = 0;
@@ -48,7 +49,8 @@ void simulate_sjfp(struct task *tasks[], int num_tasks) {
             }
             next_task++;
         }
-        // Preemption
+        // Preemption, if task comes in while one is being used by cpu with a shorter service time it gets preempted
+        // Other task that was previously held by the cpu gets put back in the ready queue
         if (cpu_head != NULL && ready_head != NULL) {
             if (ready_head->remaining_time < cpu_head->remaining_time) {
                 if (ready_head->next == NULL || cpu_head->remaining_time < ready_head->next->remaining_time){
@@ -68,13 +70,13 @@ void simulate_sjfp(struct task *tasks[], int num_tasks) {
                 cpu_head->next = NULL;
             }
         }
-        // Assigns a task to the cpu_head if it does not have one
+        // Assigns a task to the cpu if it does not have one
         if (cpu_head == NULL && ready_head != NULL) {
             cpu_head = ready_head;
             ready_head = ready_head->next;
             cpu_head->next = NULL;
         }
-        // Printing the table
+        // Printing the summary table
         printf("%3d   ", current_time);
         if (cpu_head == NULL) {
             printf("%-7s", "--");
@@ -117,15 +119,9 @@ void simulate_sjfp(struct task *tasks[], int num_tasks) {
     printf("%-4s %-8s %-9s %-11s %-9s %s\n", "tid", "time", "time", "time", "time", "time");
     printf("-------------------------------------------------\n");
     for (int i = 0; i < num_tasks; i++) {
-        printf("%-4c %-8d %-9d %-11d %-9d %d\n",
-            tasks[i]->task_id,
-            tasks[i]->arrival_time,
-            tasks[i]->service_time,
-            tasks[i]->completion_time,
-            tasks[i]->response_time,
-            tasks[i]->wait_time);
+        printf("%-4c %-8d %-9d %-11d %-9d %d\n", tasks[i]->task_id, tasks[i]->arrival_time, tasks[i]->service_time, tasks[i]->completion_time, tasks[i]->response_time, tasks[i]->wait_time);
     }
-    // Uses bubble sort to sort tasks in service time ascending
+    // Sorts the tasks array in order of service time ascending
     for (int i = 0; i < num_tasks - 1; i++) {
     for (int j = 0; j < num_tasks - i - 1; j++) {
         if (tasks[j]->service_time > tasks[j+1]->service_time) {
@@ -135,6 +131,7 @@ void simulate_sjfp(struct task *tasks[], int num_tasks) {
             }
         }
     }
+    // Prints the tasks in service time ascending as well as the tasks wait time
     printf("\nService   Wait");
     printf("\ntime      time");
     printf("\n----------------");
@@ -144,11 +141,10 @@ void simulate_sjfp(struct task *tasks[], int num_tasks) {
     printf("\n");
 }
 
-
-
 int main (int argc, char * argv[]){
     int time_slice = 0;
     int policy = 0; // 0 = sjfp, 1 = rr
+    // Checks for the correct command line arguments
     if (argc < 2) {
         printf("Error: Need to specify -rr or -sjfp\n");
         return 1;
@@ -166,10 +162,13 @@ int main (int argc, char * argv[]){
         time_slice = atoi(argv[2]);
     }
 
+    // Initializes the task struct to hold max of 26 tasks
     struct task *tasks[26];
     int num_tasks = 0;
     int arr, svc;
     while (scanf("%d %d", &arr, &svc) == 2) {
+        // Scans the stdin line by line and fills in the info about each task
+        // Increments number of tasks
         struct task *t = malloc(sizeof(struct task));
         t->task_id = 'A' + num_tasks;
         t->arrival_time = arr;
@@ -182,10 +181,11 @@ int main (int argc, char * argv[]){
         tasks[num_tasks] = t;
         num_tasks++;
     }
-
+    
+    // Checks if user chose sfjp or rr and calls their respective functions
     if (policy == 0){
         printf("SJF(preemptive) scheduling results\n\n");
-        printf("time cpu_head ready queue (tid/rst)\n");
+        printf("time cpu ready queue (tid/rst)\n");
         printf("---------------------------------\n");
         simulate_sjfp(tasks, num_tasks);
     }
