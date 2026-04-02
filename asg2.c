@@ -19,7 +19,111 @@ struct task {
     struct task *next;
 };
 
-// Function for simulating sfjp
+void simulate_rr(struct task *tasks[], int num_tasks, int time_slice){
+    struct task *cpu_head = NULL;
+    struct task *ready_head = NULL;
+    struct task *ready_tail = NULL;
+    int current_time = 0;
+    int completed = 0;
+    int next_task = 0;
+    int slice_count = 0;
+
+    while(completed < num_tasks){
+        while (next_task < num_tasks && tasks[next_task]->arrival_time == current_time){
+            if(ready_head == NULL){
+                ready_head = tasks[next_task];
+                ready_tail = tasks[next_task];
+                tasks[next_task]->next = NULL;
+            }
+            else{
+                ready_tail->next = tasks[next_task];
+                ready_tail = tasks[next_task];
+                tasks[next_task]->next = NULL;
+            }
+            next_task++;
+        }
+        if (cpu_head != NULL && slice_count == time_slice){
+            slice_count = 0;
+            cpu_head->next = NULL;
+            if (ready_head == NULL){
+                ready_head = cpu_head;
+                ready_tail = cpu_head;
+            }
+            else{
+                ready_tail->next = cpu_head;
+                ready_tail = cpu_head;
+            }
+            cpu_head = NULL;
+        }
+        if (cpu_head == NULL && ready_head != NULL){
+            cpu_head = ready_head;
+            ready_head = ready_head->next;
+            cpu_head->next = NULL;
+        }
+        // Printing the summary table
+        printf("%3d   ", current_time);
+        if (cpu_head == NULL) {
+            printf("%-7s", "--");
+        } else {
+            printf("%c%-6d", cpu_head->task_id, cpu_head->remaining_time);
+        }
+
+        if (ready_head == NULL) {
+            printf("--");
+        } else {
+            struct task *rover = ready_head;
+            while (rover != NULL) {
+                printf("%c%d", rover->task_id, rover->remaining_time);
+                if (rover->next != NULL)
+                    printf(", ");
+                rover = rover->next;
+            }
+        }
+        printf("\n");
+
+        if (cpu_head != NULL) {
+            cpu_head->remaining_time--;
+            slice_count++;
+            if (cpu_head->remaining_time == 0) {
+                cpu_head->completion_time = current_time + 1; // Since completion time is the second after it completes we add 1
+                cpu_head = NULL;
+                completed++;
+                slice_count = 0;
+            }
+        }
+        current_time++;
+    }
+    for (int i = 0; i < num_tasks; i++) {
+        tasks[i]->response_time = tasks[i]->completion_time - tasks[i]->arrival_time;
+        tasks[i]->wait_time = tasks[i]->response_time - tasks[i]->service_time;
+    }
+    // Prints the tid, arrival time, service time, completion time, response time, and wait times for each task
+    printf("\n%-4s %-8s %-9s %-11s %-9s %s\n", "", "arrival", "service", "completion", "response", "wait");
+    printf("%-4s %-8s %-9s %-11s %-9s %s\n", "tid", "time", "time", "time", "time", "time");
+    printf("-------------------------------------------------\n");
+    for (int i = 0; i < num_tasks; i++) {
+        printf("%-4c %-8d %-9d %-11d %-9d %d\n", tasks[i]->task_id, tasks[i]->arrival_time, tasks[i]->service_time, tasks[i]->completion_time, tasks[i]->response_time, tasks[i]->wait_time);
+    }
+    // Sorts the tasks array in order of service time ascending
+    for (int i = 0; i < num_tasks - 1; i++) {
+    for (int j = 0; j < num_tasks - i - 1; j++) {
+        if (tasks[j]->service_time > tasks[j+1]->service_time) {
+            struct task *temp = tasks[j];
+            tasks[j] = tasks[j+1];
+            tasks[j+1] = temp;
+            }
+        }
+    }
+    // Prints the tasks in service time ascending as well as the tasks wait time
+    printf("\nService   Wait");
+    printf("\ntime      time");
+    printf("\n----------------");
+    for ( int i = 0; i < num_tasks ; i++){
+        printf("\n%d          %d", tasks[i]->service_time, tasks[i]->wait_time);
+    }   
+    printf("\n");
+}
+// Function for simulating sjfp
 void simulate_sjfp(struct task *tasks[], int num_tasks) {
     struct task *cpu_head = NULL; // Points to the task being held by the cpu
     struct task *ready_head = NULL; // Points to the head of the ready queue list
@@ -182,17 +286,19 @@ int main (int argc, char * argv[]){
         num_tasks++;
     }
     
-    // Checks if user chose sfjp or rr and calls their respective functions
+    // Checks if user chose sjfp or rr and calls their respective functions
     if (policy == 0){
         printf("SJF(preemptive) scheduling results\n\n");
         printf("time cpu ready queue (tid/rst)\n");
         printf("---------------------------------\n");
         simulate_sjfp(tasks, num_tasks);
     }
-    else
-        return 1;
-
-
+    else{
+        printf("RR scheduling results (time slice is %d)\n\n", time_slice);
+        printf("time cpu ready queue (tid/rst)\n");
+        printf("---------------------------------\n");
+        simulate_rr(tasks, num_tasks, time_slice);
+    }
     return 0;
 }
 
