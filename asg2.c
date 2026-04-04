@@ -31,15 +31,18 @@ void sjfp(struct task *tasks[], int num_tasks){
     while(num_completed < num_tasks){
         // Puts the next task in the ready queue depending on its remaining time
         while (next_task <num_tasks && tasks[next_task]->arrival_time == current_time){
+            // Put at front if nothing in ready queue
             if(ready_head == NULL){
                 ready_head = tasks[next_task];
                 ready_head->next = NULL;
             }
+            // Put at front if service time less than the head of the ready queue
             else if (tasks[next_task]->remaining_time < ready_head->remaining_time){
                 tasks[next_task]->next = ready_head;
                 ready_head = tasks[next_task];
             }
             else{
+                // uses a rover to find where needs to place the task
                 struct task *rover = ready_head;
                 while(rover->next != NULL && tasks[next_task]->remaining_time >= rover->next->remaining_time){
                     rover = rover->next;
@@ -256,7 +259,7 @@ void round_robin(struct task *tasks[], int num_tasks, int time_slice){
 
 int main (int argc, char * argv[]){
     int time_slice = 0;
-    int policy = 0; // 0 = sjfp, 1 = rr
+    int policy = 0; // 0 for sjfp, 1 for rr
     // Checks for the correct command line arguments
     if (argc < 2){
         printf("Error: Need to specify -rr or -sjfp\n");
