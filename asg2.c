@@ -47,6 +47,7 @@ void sjfp(struct task *tasks[], int num_tasks){
                 tasks[next_task]->next = rover->next;
                 rover->next = tasks[next_task];
             }
+
             next_task++;
         }
         // This is the preemption step where if new task is shorter, kick current one off cpu
@@ -113,6 +114,7 @@ void sjfp(struct task *tasks[], int num_tasks){
         tasks[i]->wait_time =tasks[i]->response_time - tasks[i]->service_time;
     }
     // Prints the tid, arrival time, service time, completion time, response time, and wait times for each task
+    // Uses left centering for the formatting
     printf("\n%-4s %-8s %-9s %-11s %-9s %s\n", "","arrival", "service", "completion","response", "wait");
     printf("%-4s %-8s %-9s %-11s %-9s %s\n", "tid", "time", "time", "time","time", "time");
     printf("-------------------------------------------------\n");
@@ -120,7 +122,7 @@ void sjfp(struct task *tasks[], int num_tasks){
         printf("%-4c %-8d %-9d %-11d %-9d %d\n", tasks[i]->task_id,tasks[i]->arrival_time, tasks[i]->service_time, tasks[i]->completion_time,tasks[i]->response_time, tasks[i]->wait_time);
     }
     // Sorts the tasks array in order of service time ascending
-    for (int i = 0; i < num_tasks - 1; i++) {
+    for (int i = 0; i < num_tasks-1; i++) {
         for (int j = 0; j < num_tasks - i - 1; j++) {
             if (tasks[j]->service_time > tasks[j+1]->service_time){
                 struct task *temp = tasks[j];
@@ -130,11 +132,11 @@ void sjfp(struct task *tasks[], int num_tasks){
         }
     }
     // Prints the tasks in service time ascending as well as the tasks wait time
-    printf("\nService Wait");
-    printf("\ntime time");
+    printf("\nService  Wait");
+    printf("\ntime     time");
     printf("\n----------------");
     for ( int i = 0; i < num_tasks ; i++){
-        printf("\n%d %d", tasks[i]->service_time, tasks[i]->wait_time);
+        printf("\n%d         %d", tasks[i]->service_time, tasks[i]->wait_time);
     }
     printf("\n");
 }
@@ -189,7 +191,8 @@ void round_robin(struct task *tasks[], int num_tasks, int time_slice){
         printf("%3d ",current_time);
         if (cpu_head == NULL){
             printf("%-7s", "--");
-        } else {
+        } 
+        else {
             printf("%c%-6d", cpu_head->task_id, cpu_head->remaining_time);
         }
         if(ready_head == NULL){
@@ -224,6 +227,7 @@ void round_robin(struct task *tasks[], int num_tasks, int time_slice){
         tasks[i]->wait_time = tasks[i]->response_time - tasks[i]->service_time;
     }
     // Prints the tid, arrival time, service time, completion time, response time, and wait times for each task. Same as sjfp
+    // uses left centering for the formatting
     printf("\n%-4s %-8s %-9s %-11s %-9s %s\n", "", "arrival", "service","completion", "response","wait");
     printf("%-4s %-8s %-9s %-11s %-9s %s\n", "tid", "time", "time", "time","time", "time");
     printf("-------------------------------------------------\n");
@@ -241,11 +245,11 @@ void round_robin(struct task *tasks[], int num_tasks, int time_slice){
         }
     }
     // Prints the tasks in service time ascending as well as the tasks wait time. Same as sjfp
-    printf("\nService Wait");
-    printf("\ntime time");
+    printf("\nService  Wait");
+    printf("\ntime     time");
     printf("\n----------------");
     for ( int i = 0; i < num_tasks ; i++){
-        printf("\n%d %d", tasks[i]->service_time, tasks[i]->wait_time);
+        printf("\n%d         %d", tasks[i]->service_time, tasks[i]->wait_time);
     }
     printf("\n");
 }
@@ -302,6 +306,11 @@ int main (int argc, char * argv[]){
         printf("time cpu ready queue (tid/rst)\n");
         printf("---------------------------------\n");
         round_robin(tasks, num_tasks, time_slice);
+    }
+
+    // freeing the allocated memory
+    for (int i = 0; i < num_tasks; i ++){
+        free(tasks[i]);
     }
     return 0;
 }
